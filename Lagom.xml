@@ -1,0 +1,53 @@
+<templateSet group="Lagom">
+  <template name="api" value="trait $NAME$Service extends Service {&#10;&#10;  override def descriptor: Descriptor = {&#10;    import Method._&#10;    import Service._&#10;&#10;    named(&quot;$NAME_LOWER$&quot;).withCalls(&#10;      &#10;    ).withTopics(&#10;      &#10;    )&#10;  }&#10;}" description="A lagom api definition" toReformat="false" toShortenFQNames="true">
+    <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true" />
+    <variable name="NAME_LOWER" expression="decapitalize(NAME)" defaultValue="" alwaysStopAt="false" />
+    <context>
+      <option name="SCALA" value="true" />
+    </context>
+  </template>
+  <template name="impl" value="class $NAME$ServiceImpl(persistentEntities: PersistentEntityRegistry)(implicit ec: ExecutionContext)&#10;  extends $NAME$Service {&#10;}" description="A service implementation" toReformat="false" toShortenFQNames="true">
+    <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true" />
+    <context>
+      <option name="SCALA" value="true" />
+    </context>
+  </template>
+  <template name="app" value="abstract class BasketApplication(ctx: LagomApplicationContext) extends LagomApplication(ctx)&#10;  with AhcWSComponents&#10;  with LagomKafkaComponents&#10;  with CassandraPersistenceComponents {&#10;  override def lagomServer: LagomServer = LagomServer.forServices {&#10;    bindService[$NAME$Service].to(wire[$NAME$ServiceImpl])&#10;  }&#10;&#10;  persistentEntityRegistry.register(wire[$NAME$])&#10;}&#10;&#10;class $NAME$ApplicationLoader extends LagomApplicationLoader {&#10;  override def loadDevMode(context: LagomApplicationContext): LagomApplication =&#10;    new $NAME$Application(context) with LagomDevModeComponents {&#10;      override def jsonSerializerRegistry: JsonSerializerRegistry = $NAME$SerializerRegistry&#10;    }&#10;&#10;  override def load(context: LagomApplicationContext): LagomApplication = new $NAME$Application(context) {&#10;    override def serviceLocator: ServiceLocator = NoServiceLocator&#10;    override def jsonSerializerRegistry: JsonSerializerRegistry = $NAME$SerializerRegistry&#10;  }&#10;}&#10;&#10;object $NAME$SerializerRegistry extends JsonSerializerRegistry {&#10;  override def serializers: Seq[JsonSerializer[_]] = Seq(&#10;  &#10;    )&#10;}" description="Template for an application" toReformat="false" toShortenFQNames="true">
+    <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true" />
+    <context>
+      <option name="SCALA" value="true" />
+    </context>
+  </template>
+  <template name="serial" value="implicit val $NAME$Format: Format[$CLASS$] = Json.format" description="A serializer for lagom" toReformat="false" toShortenFQNames="true">
+    <variable name="CLASS" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
+    <variable name="NAME" expression="decapitalize(CLASS)" defaultValue="" alwaysStopAt="true" />
+    <context>
+      <option name="SCALA" value="true" />
+    </context>
+  </template>
+  <template name="pe" value="object $NAME$Formats {&#10;}&#10;&#10;trait $NAME$Command&#10;&#10;case class $NAME$State()&#10;object $NAME$State{&#10;  val initial = $NAME$State()&#10;}&#10;&#10;sealed trait $NAME$Event extends AggregateEvent[$NAME$Event] {&#10;  override def aggregateTag = $NAME$Event.Tag&#10;}&#10;&#10;object $NAME$Event {&#10;  val Tag = AggregateEventTag.sharded[$NAME$Event](4)&#10;}&#10;&#10;final class $NAME$ extends PersistentEntity {&#10;  override type Command = $NAME$Command&#10;  override type Event = $NAME$Event&#10;  override type State = $NAME$State&#10;&#10;  override def initialState = $NAME$State.initial&#10;&#10;  override def behavior: Behavior = Actions()&#10;}" description="A persistent Entity" toReformat="false" toShortenFQNames="true">
+    <variable name="NAME" expression="" defaultValue="" alwaysStopAt="true" />
+    <context>
+      <option name="SCALA" value="true" />
+    </context>
+  </template>
+  <template name="rest" value="restCall($METHOD$, &quot;/$SERVICE_NAME$/$SUFFIX$/&quot;, $FUNC_NAME$ _)" description="A rest call" toReformat="false" toShortenFQNames="true">
+    <variable name="METHOD" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
+    <variable name="SERVICE_NAME" expression="decapitalize(firstWord(scala_className()))" defaultValue="" alwaysStopAt="true" />
+    <variable name="SUFFIX" expression="" defaultValue="" alwaysStopAt="true" />
+    <variable name="FUNC_NAME" expression="" defaultValue="" alwaysStopAt="true" />
+    <context>
+      <option name="SCALA" value="true" />
+    </context>
+  </template>
+  <template name="prod" value="override def $FUNCTION_NAME$: Topic[$PRODUCED_TYPE$] =&#10;    TopicProducer.taggedStreamWithOffset($SOURCE_SUPERTYPE$.Tag.allTags.to[immutable.Seq]) { (tag, offset) =&gt;&#10;      persistentEntities.eventStream(tag, offset).collect { &#10;        case EventStreamElement(t, $EVENT_TYPE$, o)  =&gt; {&#10;          $RESULT$ -&gt; o&#10;        }&#10;      }&#10;  }" description="A topic producer" toReformat="false" toShortenFQNames="true">
+    <variable name="FUNCTION_NAME" expression="" defaultValue="" alwaysStopAt="true" />
+    <variable name="PRODUCED_TYPE" expression="classNameComplete()" defaultValue="" alwaysStopAt="true" />
+    <variable name="SOURCE_SUPERTYPE" expression="completeSmart()" defaultValue="" alwaysStopAt="true" />
+    <variable name="EVENT_TYPE" expression="classNameComplete()" defaultValue="" alwaysStopAt="true" />
+    <variable name="RESULT" expression="" defaultValue="" alwaysStopAt="true" />
+    <context>
+      <option name="SCALA" value="true" />
+    </context>
+  </template>
+</templateSet>
